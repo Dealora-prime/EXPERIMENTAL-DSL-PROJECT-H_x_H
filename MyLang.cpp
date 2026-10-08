@@ -62,6 +62,8 @@ void lexer(const fs::path& path) {
                         digit
                     });
                 }
+
+                digit.clear();
             }
             tokens.push_back({
                 TokenType::STATEMENT_TERMINATOR,
