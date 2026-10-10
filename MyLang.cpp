@@ -118,14 +118,39 @@ vector<Token> lexer(const fs::path& path) {
     return tokens;
 }
 
+struct Parser {
+    vector<Token> lexerTokens;
+    Parser(const vector<Token>& tokens) : lexerTokens(tokens) {}
+
+    bool expect(const TokenType& expected, size_t& position) {
+        if (lexerTokens[position].type == expected) {
+            position++;
+            return true;
+        }
+        return false;
+    }
+
+    bool parseDeclaration(size_t& position) {
+        if (!expect(TokenType::LET_KW, position)) return false;
+        if (!expect(TokenType::INT_DT, position)) return false;
+        if (!expect(TokenType::IDENTIFIER, position)) return false;
+        if (!expect(TokenType::ASSIGNMENT, position)) return false;
+        if (!expect(TokenType::INT_VALUE, position)) return false;
+        if (!expect(TokenType::TERMINATOR, position)) return false;
+        return true;
+    }
+};
+
 int main() {
     for (const auto& entry : fs::directory_iterator(".")) {
         if (entry.path().extension() == ".ic") {
             vector<Token> lexerTokens = lexer(entry.path());
-
-            cout << "================LexerTokens==============\n";
-            for (const Token& token : lexerTokens) {
-                cout << "Lexer Token = " << token.value << endl;
+            Parser parser(lexerTokens);
+            size_t position = 0;
+            if (!parser.parseDeclaration(position)) {
+                cerr << "Invalid Declaration\n";
+            } else {
+                cout << "Valid Declaration\n";
             }
         }
     }
