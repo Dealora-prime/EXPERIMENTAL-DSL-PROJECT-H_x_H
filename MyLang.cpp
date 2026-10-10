@@ -53,7 +53,7 @@ vector<Token> lexer(const fs::path& path) {
 
         if (isalpha(ch)) {
             string word;
-            while (position < code[position]) {
+            while (position < code.length()) {
                 if (isalnum(static_cast<unsigned char>(code[position])) || code[position] == '_') {
                     word += code[position];
                     position++;
@@ -123,6 +123,7 @@ struct Parser {
     Parser(const vector<Token>& tokens) : lexerTokens(tokens) {}
 
     bool expect(const TokenType& expected, size_t& position) {
+        if (position >= lexerTokens.size()) return false;
         if (lexerTokens[position].type == expected) {
             position++;
             return true;
@@ -147,10 +148,13 @@ int main() {
             vector<Token> lexerTokens = lexer(entry.path());
             Parser parser(lexerTokens);
             size_t position = 0;
-            if (!parser.parseDeclaration(position)) {
-                cerr << "Invalid Declaration\n";
-            } else {
-                cout << "Valid Declaration\n";
+            while (position < lexerTokens.size()) {
+                if (!parser.parseDeclaration(position)) {
+                    cerr << "Invalid Declaration\n";
+                    break;
+                } else {
+                    cout << "Valid Declaration\n";
+                }
             }
         }
     }
