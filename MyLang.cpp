@@ -9,8 +9,7 @@ namespace fs = filesystem;
 
 enum class TokenType {
     LET_KW, INT_DT, IDENTIFIER,
-    ASSIGNMENT, INT_VALUE,
-    TERMINATOR
+    ASSIGNMENT, INT_VALUE, TERMINATOR
 };
 
 struct Token {
@@ -18,16 +17,16 @@ struct Token {
     string value;
 };
 
-
 bool isNumber(const string& number) {
     if (number.empty()) return false;
     for (char n : number) if (!isdigit(static_cast<unsigned char>(n))) return false;
     return true;
 }
+
 bool isIdentifier(const string& var) {
     if (var.empty()) return false;
-    if (!isalpha(static_cast<unsigned char>(var[0])) || var[0] == '_') return false;
-    for (char c : var) if (!isalnum(static_cast<unsigned char>(c)) || c != '_') return false;
+    if (!isalpha(static_cast<unsigned char>(var[0]))) return false;
+    for (char c : var) if (!isalnum(static_cast<unsigned char>(c)) && c != '_') return false;
     return true;
 }
 
@@ -44,20 +43,19 @@ vector<Token> lexer(const fs::path& path) {
     }
 
     size_t position = 0;
-    
+
     while (position < code.length()) {
-        unsigned char ch = static_cast<unsigned char>(code[position]);
+        auto ch = static_cast<unsigned char>(code[position]);
         if (isspace(ch)) {
             position++;
             continue;
-        } 
+        }
 
         if (isalpha(ch)) {
             string word;
-            while (position < code.length()) {
-                unsigned char ch1 = static_cast<unsigned char>(code[position]);
-                if (isalnum(ch1) || ch1 == '_') {
-                    word += ch1;
+            while (position < code[position]) {
+                if (isalnum(static_cast<unsigned char>(code[position])) || code[position] == '_') {
+                    word += code[position];
                     position++;
                 } else {
                     break;
@@ -84,46 +82,51 @@ vector<Token> lexer(const fs::path& path) {
         } else if (isdigit(ch)) {
             string digit;
             while (position < code.length()) {
-                if (!isdigit(static_cast<unsigned char>(code[position]))) break;
-                digit += code[position];
-                position++;
+                if (isdigit(static_cast<unsigned char>(code[position]))) {
+                    digit += code[position];
+                    position++;
+                } else {
+                    break;
+                }
             }
 
             if (isNumber(digit)) {
-                while (position < code.length()) {
-                    tokens.push_back({
-                        TokenType::INT_VALUE,
-                        digit
-                    });
-                    position++;
-                }
+                tokens.push_back({
+                    TokenType::INT_VALUE,
+                    digit
+                });
             }
             continue;
-
         } else if (ch == '=') {
             tokens.push_back({
                 TokenType::ASSIGNMENT,
                 string(1, ch)
             });
             position++;
-        continue;
-
+            continue;
         } else if (ch == ';') {
             tokens.push_back({
                 TokenType::TERMINATOR,
                 string(1, ch)
             });
             position++;
+            continue;
+        } else {
+            break;
         }
-        continue;
-
     }
     return tokens;
 }
+
 int main() {
     for (const auto& entry : fs::directory_iterator(".")) {
         if (entry.path().extension() == ".ic") {
+            vector<Token> lexerTokens = lexer(entry.path());
 
+            cout << "================LexerTokens==============\n";
+            for (const Token& token : lexerTokens) {
+                cout << "Lexer Token = " << token.value << endl;
+            }
         }
     }
     return 0;
